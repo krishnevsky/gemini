@@ -5,16 +5,17 @@ const Suite = require('lib/suite');
 
 describe('tests-api', () => {
     let rootSuite;
+    let gemini;
+
+    const stubConfig = () => ({system: {}});
 
     beforeEach(() => {
         rootSuite = Suite.create('');
     });
 
     describe('.suite method', () => {
-        let gemini;
-
         beforeEach(() => {
-            gemini = testsAPI(rootSuite);
+            gemini = testsAPI(rootSuite, null, null, stubConfig());
         });
 
         it('should throw an error if first argument is not a string', () => {
@@ -45,7 +46,7 @@ describe('tests-api', () => {
 
         describe('child suites of the same name', () => {
             beforeEach(() => {
-                gemini = testsAPI(rootSuite, ['browser1']);
+                gemini = testsAPI(rootSuite, ['browser1'], null, stubConfig());
             });
 
             it('should not allow to create with intersect browsers', () => {
@@ -60,7 +61,7 @@ describe('tests-api', () => {
             it('should allow to create with not intersecting browser sets', () => {
                 gemini.suite('name', () => gemini.suite('child', () => {}));
 
-                gemini = testsAPI(rootSuite, ['browser2']);
+                gemini = testsAPI(rootSuite, ['browser2'], null, stubConfig());
 
                 assert.doesNotThrow(() => {
                     gemini.suite('name', () => {
@@ -167,10 +168,9 @@ describe('tests-api', () => {
 
     describe('browsers', () => {
         const browsers = ['some-browser', 'other-browser'];
-        let gemini;
 
         beforeEach(() => {
-            gemini = testsAPI(rootSuite, browsers);
+            gemini = testsAPI(rootSuite, browsers, null, stubConfig());
         });
 
         it('should be set for top level suite', () => {
@@ -191,17 +191,17 @@ describe('tests-api', () => {
     });
 
     describe('file path', () => {
-        const file = 'path/file.js';
-        let gemini;
+        const file = '/root/path/file.js';
+        const relativeFile = 'path/file.js';
 
         beforeEach(() => {
-            gemini = testsAPI(rootSuite, [], file);
+            gemini = testsAPI(rootSuite, [], file, {system: {projectRoot: '/root'}});
         });
 
-        it('should be set for suite', () => {
+        it('should be set relative for suite', () => {
             gemini.suite('suite', () => {});
 
-            assert.equal(rootSuite.children[0].file, file);
+            assert.equal(rootSuite.children[0].file, relativeFile);
             assert.isTrue(rootSuite.children[0].hasOwnProperty('file'));
         });
 
@@ -210,8 +210,26 @@ describe('tests-api', () => {
                 gemini.suite('child', () => {});
             });
 
-            assert.equal(rootSuite.children[0].children[0].file, file);
+            assert.equal(rootSuite.children[0].children[0].file, relativeFile);
             assert.isFalse(rootSuite.children[0].children[0].hasOwnProperty('file'));
+        });
+    });
+
+    describe('.ctx method', () => {
+        it('should contain `ctx` from a config', () => {
+            gemini = testsAPI(rootSuite, null, null, {system: {ctx: {some: 'ctx'}}});
+
+            assert.deepEqual(gemini.ctx, {some: 'ctx'});
+        });
+
+        it('should not mutate a config', () => {
+            const config = {system: {ctx: {}}};
+
+            gemini = testsAPI(rootSuite, null, null, config);
+
+            Object.defineProperty(gemini.ctx, 'another', {});
+
+            assert.notProperty(config.system.ctx, 'another');
         });
     });
 });
