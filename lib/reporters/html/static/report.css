@@ -81,10 +81,15 @@
     user-select: none;
 }
 
-.section__skipped {
+.section__title_skipped {
     font-weight: bold;
     color: #ccc;
     cursor: default;
+
+    -moz-user-select: text;
+    -webkit-user-select: text;
+    -ms-user-select: text;
+    user-select: text;    
 }
 
 .section__title:before, .meta-info__switcher:before {
