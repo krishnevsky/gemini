@@ -14,9 +14,9 @@
             <div class="section section_collapsed {{section-status}} {{has-retries}}">
                 <div class="section__title section__title_skipped">
                     {{#if result.skipped}}
-                            {{#if result.reason}}
-                                [skipped] {{result.name}}, reason: {{{result.reason}}}
-                            {{/if}}
+                        {{#if result.reason}}
+                            [skipped] {{result.name}}, reason: {{{result.reason}}}
+                        {{/if}}
                         {{#unless result.reason}}
                             [skipped] {{result.name}}
                         {{/unless}}
